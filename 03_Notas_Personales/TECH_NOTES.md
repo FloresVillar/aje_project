@@ -149,3 +149,82 @@ Tambien se define [string] y los parametros mediante $command y $ARCHIVO.
 
 Luego **switch** es la estructura de control de flujos, es un comparador por lista. Toma el valor de $command recorre la la lista dentro de **{}** y busca el nombre que coincida con el argumento ingresado mediante .\make ARGUMENTO.
 
+## Teoria acerca de los .wsdl y SOAP
+Un WSDL (web services description language) es, un manual de instrucciones tecnico de un servicio web basado en SOAP.
+
+Cuando un sistema necesita hablar con un servicor de AJE ,el archivo WSDL dice:
+- Qué metodos existes (ej: validarEmpleado)
+- Qué datos debo enviar (ej : un string para el nombre, un integer para el ID)
+- Qué voy a recibir de vuelta (ej: codigo de exito)
+- A donde enviar la peticion (la URL o endpoint del servicio)
+
+Tiene etiquetas, entre las mas importantes:
+- **< types >** : Define los tipos de datos(como un diccionario de variables)
+- **< messages >** : Define los datos que entran y salen
+- **< portType >** : Es la lista de operaciones 
+- **< binding >** : Define el protocolo (HTTP) y el formato de mensajes
+- **< services >** : La direccion fisica(URL) donde vive el servicio
+
+Mientras que SOAP (Simple Object Access Protocol) es el "sobre" para enviar el contrato(.wsdl).
+Es un protocolo de comunicacion que permite que dos sistemas intercambien informacion.Geralmente a traves de HTTP (en formato xml).
+
+SOAP define la estructura exacta del .wsdl para que este no sea rechazado
+- Envelope(Envoltorio) : La etiqueta raiz dice:"este es un mensaje SOAP"
+- Header : Informacion adicional
+- Body : contenido, se pide por ejemplo los datos de un empleado
+- Fault: Si algo salio mal
+
+Las 3 reglas de SOAP: 
+- Solo XML : no usa json. Es un texto plano pero con etiquetas muy rigidas.
+- Independiente : Si el servidor es windows y el cliente un contenedor linux, si ambos leen XMl, se entienden
+- Neutralidad de transporte: aunque normalmente viaja por http, SOAP podria ser enviado via correo u otros medios.
+
+comparando 
+
+```bash
++-----------------+--------------------------------+-------------------------------+
+| Característica  |  WSDL / SOAP (Plan de Viajes)  |   REST / JSON (Salesforce)    |
++-----------------+--------------------------------+-------------------------------+
+| Formato         | XML estricto                   | JSON ligero                   |
++-----------------+--------------------------------+-------------------------------+
+| Rigidez         | Muy alta (falla si falta algo) | Flexible                      |
++-----------------+--------------------------------+-------------------------------+
+| Contrato        | WSDL (Contrato obligatorio)    | Opcional (Swagger/OpenAPI)    |
++-----------------+--------------------------------+-------------------------------+
+| Uso común       | Sistemas bancarios, ERP, AJE   | Apps móviles, Web modernas    |
++-----------------+--------------------------------+-------------------------------+
+| Protocolo       | Basado en Acciones (Verbos)    | Basado en Recursos (Nombres)  |
++-----------------+--------------------------------+-------------------------------+
+| Transporte      | HTTP, SMTP, JMS, etc.          | Principalmente HTTP/HTTPS     |
++-----------------+--------------------------------+-------------------------------+
+```
+Ejemplos
+```bash
++----------+--------------------------------+--------------------------------+
+| Aspecto  |     SOAP (Plan de Viajes)      |    REST (Salesforce / Zuper)   |
++----------+--------------------------------+--------------------------------+
+| Estilo   | Acción (Ej: ValidarUsuario)    | Recurso (Ej: /usuarios/123)    |
++----------+--------------------------------+--------------------------------+
+| Verbos   | Casi siempre usa POST          | Usa GET, POST, PUT, DELETE     |
++----------+--------------------------------+--------------------------------+
+| Peso     | Pesado (XML con mucho overhead)| Ligero (JSON optimizado)       |
++----------+--------------------------------+--------------------------------+
+| Estado   | Stateful (puede mantenerlo)    | Stateless (sin estado)         |
++----------+--------------------------------+--------------------------------+
+| Seguridad| WS-Security (Nivel Mensaje)    | HTTPS / OAuth (Nivel Canal)    |
++----------+--------------------------------+--------------------------------+
+```
+AJE usa SOAP y no algo mas moderno? 
+- Seguridad: tiene estandares muy robustos (Ws-Security) 
+- Transacciones: si un viaje se realiza a medias, se cancela
+- Contrato seguro: gracias a wsdl , si el mensaje no es perfecto el servidor rebota.
+
+```bash
+<soap:Envelope xmlns:soap="http://www.w3.org">
+    <soap:Header/>
+        <soap:Body>
+        <m:GetEmpleado>
+        </GetEmpleado>
+    </Body>
+</soap:Envelope>
+```
