@@ -228,3 +228,13 @@ AJE usa SOAP y no algo mas moderno?
     </Body>
 </soap:Envelope>
 ```
+
+## Diagrama de procesos de Negocio
+
+Un diagrama de proceso de negocio bajo el estandar BPMN 2.0 business protocol model and notation, es el lenguaje universal que usan los arquitectos de soluciones y analistas para que el equipo de IT y el de negocio hablen el mismo idioma.
+
+Es un diagrama de flujo de procesos (BPMN) de nivel macro.Se organiza mediante:
+- pool : El recuadro que contiene los demas elementos.
+- Lanes(carriles): las divisiones horizontales que indica quien hace qué
+- Eventos (circulos): verde para inicio y rojo para el final
+- Comuertas (gateways) : los rombos con una X o + , indican decisiones o divisiones del flujo
