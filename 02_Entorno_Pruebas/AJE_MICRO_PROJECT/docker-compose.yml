@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  as400_core:
+    build: ./core_legacy
+    container_name: as400_core
+    ports:
+      - "5001:5001"
+    volumes:
+      - ./core_legacy/database:/app/database
+    networks:
+      - onprem_net
+  integrador_api:
+    build: ./middleware_onprem
+    depends_on:
+      - as400_core
+    ports:
+      - "8080:8080"
+    environment:
+      - ERP_URL=http://as400_core:5001/services/InsertaOG
+    networks:
+      - azure_net
+      - onprem_net
+  portal_viajes:
+    build: ./cloud_azure
+    container_name: portal_viajes
+    depends_on:
+      - integrador_api
+    environment:
+      - API_URL=http://integrador_api:8080/ejecutaFuncion
+    networks:
+      - azure_net
+  fabric_monitor:
+    build: ./transversal_analytics
+    container_name: fabric_monitor
+    volumes:
+      - ./core_legacy/database:/app/database
+    depends_on:
+      - as400_core
+
+networks:
+  azure_net:
+  onprem_net:
