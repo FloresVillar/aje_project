@@ -128,6 +128,10 @@ Desglosando la sintaxis, **cmd /c** levanta una instancia del procesador de coma
 
 Ademas se puede redireccionar la salida  de este ultimo comando , mediante **Out-File -FilePath "ARCHIVO"**
 
+```bash
+cmd /c "tree /f /a" | Out-File "arbol_directorio.txt"       
+
+```
 
 **estado**<br>
 Se solventa adecuadamente
