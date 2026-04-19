@@ -18,6 +18,7 @@ services:
       - "8080:8080"
     environment:
       - ERP_URL=http://as400_core:5001/services/InsertaOG
+      - ERP_UPDATE=http://as400_core:5001/services/ActualizaPersonal
     networks:
       - azure_net
       - onprem_net
@@ -37,7 +38,27 @@ services:
       - ./core_legacy/database:/app/database
     depends_on:
       - as400_core
-
+    environment:
+      - PYTHONUNBUFFERED=1
+  gestion_modulo:
+    build: ./sap_mx
+    container_name: gestion_nomina
+    volumes:
+      - ./core_legacy/database:/app/database
+    command: python procesar_nomina.py
+    networks:
+      - backend_net
+    environment:
+      - PYTHONUNBUFFERED=1 
+  portal_rrhh:
+    build: ./portal_rrhh
+    container_name: portal_rrhh
+    networks:
+      - azure_net
+    depends_on:
+      - integrador_api
 networks:
   azure_net:
   onprem_net:
+  backend_net:
+  

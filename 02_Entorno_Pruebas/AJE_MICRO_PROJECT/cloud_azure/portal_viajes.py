@@ -1,4 +1,6 @@
 import requests
+import time
+time.sleep(10)
 #simula el fronted de Azure solicitando el gasto
 solicitud_viaje = {
     "viaje_id" : "VIAJE_2026-MX",

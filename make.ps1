@@ -6,6 +6,9 @@ switch($command){
     "arbol_archivos"{
         cmd /c "tree /f /a" | Out-File -FilePath ".\$ARCHIVO.txt"
     }
+    "limpieza"{
+        
+    }
     default {
         Write-Host "--MENU AYUDA" -ForegroundColor Red
         Write-Host "comandos"
