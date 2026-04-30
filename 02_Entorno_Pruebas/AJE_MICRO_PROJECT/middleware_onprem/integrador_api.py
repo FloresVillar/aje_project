@@ -58,6 +58,18 @@ def disparador_aws_glue():
         except Exception as e:
             print(f"[ERROR] disparador fallido : {e}")
         time.sleep(40)
+#este modulo(middleware_onprem) simula el Job de AWS Glue(ETLItems-Corp). Su funcion es succionar el paquete de satelite y despositarlo en el volumen compartido database/
+DATABASE_PATH = "database/items.csv"
+@app.route('/aws_glue/ETLItemsJob-Corp',methods=['POST'])
+def run_items_etl():
+    response = requests.get("htpp://as400_core:5001/services/GetItems") # 1. extrae desde el satelite
+    data = response.json()
+    df = pd.DataFrame(data)                         #  2. transformacion
+    df['BaseWt'] = pd.to_numeric(df['BaseWt'])      #   validacion de integridad(que los pesos sean numericos)
+    os.makedirs('database',exist_ok=True)           # 3  carga al volumen compartido (simulando RDS Postgres)
+    df.to_csv(DATABASE_PATH,index=False)    
+    return jsonify({"status":"succes","records_processed":len(df)})
+
 
 if __name__=='__main__':
     threading.Thread(target=disparador_aws_glue,daemon=True).start()

@@ -138,5 +138,53 @@ Un detalle crucial es que el flujo no es solo Big Magic hacia AVAIL , existen pr
 1. En **as400_core** se crea la tabla (csv) **mpersoeff_bomc.csv** con las columnas exactas (**MakeeItemCd**,**BomVerCd**,**UsePer**)
 
 2. En **integrador_api** Añadimos en un endpoint llamado **/aws_glue/sync_boms**. Cuando este sea invocado leera los datos del core, aplicara la logica de "transformacion" , ej : validando que **WastePct** sea un numero y lo sube a destino.
-3. En **fabric_monitor** Ahora no solo mira la nomina , sin oquee compara lo que se produce en la receta **IBOMS** para detectar desviacions de costo.
+3. En **fabric_monitor** Ahora no solo mira la nomina , sin que compara lo que se produce en la receta **IBOMS** para detectar desviacions de costo.
 
+### InvActs.docx 
+
+Describe los detalles de Inventarios reales. Se simulará no solo qué deberia pasar(bomb) sino qué esta pasando fisicamente en el almacen de AJE.
+
+Que datos viajan en el paquete **InvActs** , segun los estandares de AJE .
+1. Identificadores de ubicacion y producto: 
+    - LocCd (Location Code) es el codigo de la planta o centro de distribucion (ej 8502)
+    - ItemCd ( Item Code) es el codigo unico del producto o materia prima, es el nexo que une esta tabla con la de Boms
+
+2. Datos y cantidad y estado
+    - InvQty (Invetory Quanty) la cantidad fisica contada, es un valor decimal (ej 8040-0000)
+    - AvailQty ;(Available Quantity) no siempre es igual a la anterior, representa lo que esta libre para usar
+    - HoldQty (Hold Quantity) mercancia que esta en el almacen pero "bloqueado" por control de calidad o dañada.
+
+3. Atributos de tiempo y registro (criticos para ETL) 
+    - AsOfStamp (As of Date/time): la marca de tiempo exacta de cuando se tomo lectura en el ERP.Evita que el sistema use datos obsoletos
+
+    - InvTm(inventory time) hora especifica del registro , necesaria para la precision en el motor AVAIl.
+
+4. Metadatos de integracion 
+    - Parcel Type(INVACTS) la etiqueta que le dice  ASW Glue, este paquete es de inventarios , no son nominas ni recetas
+    - Iterface Table Name (IINVACTS) el nombre de la tabla puente, donde caeran los datos antes de entrar al postgres final.
+
+### Items.docx
+**Un producto es una combinacion de tipo , variedad y opcionalmente variante**. El nombre corto del producto debe contener dos elementos ej : 15OZ_CN1/12_BSTDTSODA 
+
+- tipo      :   15OZ_CN1/12
+- variedad  :   BSTDTSODA
+
+1. **Identidad y clasificacion**: Estos campos perrmiten que el sistema AVAIL agrupe los productos para reportes gerenciales 
+    - **ItemCd & ItemNm** : el codigo alfanumerico (ej 13439) y el nombre largo descriptivo (150Z CN 1/12 DTSODA)
+    - **KindCd & VarietyCd** : clasificacion tecnica . El kind define la naturaleza (ej Gaseosa) y Variety (el sabor o tipo especifico)
+    - itemTag1 (familia): Etiqueta de agrupacion superior como **CSD(carbonated soft drinks)**
+    - Variant : Atributo para distinguir versiones de un mismo producto, como una edicion de exportacion.
+2. **Flags de estados** (las reglas del negocio): Estas son caracteres de un solo digito (Y/N) que le dicen al integrador como tratar el dato
+    - IsProd (Is Produced) : indica si el item sale de un linea de produccio nde AJE 
+    - IsMatl (is material) : Indica si es materi prima (aucar, preformas, etiquetas)
+    - IsWIP (Work in progress) : para productos intermedios , como el jarabe (Syrup) que aun no ha sido embotellado.
+    - IsPal ( Is Pallet) : Define si el item es una unidad de transporte (pallet)
+    - IsBusy & IsSell : Determinan si el item se compra a proveedores o se vende directamente a cliente.
+3. **Atributos fiscicos y logisticos** (La inteligencia de carga) Cruciales para que el fabric_monitor calcule pesos y volumenes de despacho.
+    - **BaseUoM** (base unit of measure) la unidad minima de inventario , por ejemplo, CASE (caja) o BIB (bag-in-box)
+    - **BaseWt** (Base Weight) el peso de la unidad (ej 6.37) es vital para no sobrecargar los camiones en la simulacion de despacho
+    - **ShipWt** (Ship Weight) El peso total cuando se envia en unidades mayores, como un pallet completo (ej 1350)
+
+
+
+    

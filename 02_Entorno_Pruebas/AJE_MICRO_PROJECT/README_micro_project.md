@@ -167,6 +167,64 @@ En as400_core.py  este endpoint simula los Sps **AV10_ISIS_FLOOR** y **AV10_ISIS
     - Valida que la fecha **InvTm** tenga el formato ISO correcto
     - Prepara el paquete para la tabla de interfaz **IINVACTS**
 
-4. 
+
 
 ## Simulacion cadena de suministros/Avail/Items.docx
+
+Se representa la integracion completa del catalogo de maestros , de modo que los datos tecnicos de items den sentido a los invetarios y recetas del ecosistema.
+1. **origen : AS400** Este modulo actua como el satelite **SRVGLZADB01** exponiendo la tabla de interfaz IITEMS
+    - Generacion de datos: provee los atributos  maestros detallados en la documentacion como **ItemCd** o **ItemNm** (ej BIG COLA 3L ) y los flags de negocio **IsProd** e **isMatl**
+    - calculos logisticos: Incluye el **BaseWt** (peso por unidad) y **ShipWt** (peso por pallet) fundamentales para simular la capacidad de carga de los camiones
+    - Servicio : expone el endpoint **http://as400_core:5001/services/GetItems** para que los demas modulos consuman la informacion
+2. **sincronizacion : integrador API(integrador_api.py)** Simula la funcion de AWS GLue mediante mediante el Job ETLItemsJob-Corp
+    - Extraccion: Realiza una peticion POST al AS400 para obtener el JSOn maestro
+    - Persistencia: Transforma los datos y los guarda fisicamente en **databases/items.csv** dentro del volumen compartido
+    - Orquestacion: Este paso es el "disparador" que permite que el monitor pase de mostrar codigos numericos a nombres reales de productos
+3. **Monitor inteligente: Fabric Monitor (fabric_monitor.py)** Actua como el motor AVAIl , realizando el cruce de dats JOIN en tiempo real
+    - Auditoria de recetas: cruza el archivo de BOMS con el de Items para traducir codigos como **501068** a nombres descriptivos como **BIG COLA 3L**
+    - Auditoria logistica: Utiliza el **BaseUoM** (ej CASE) para identificar la unidad de medida y multiplicar el stock actual (**InvQty**) por el **BaseWt** para informar el peso total de kg presentes en la planta
+    - Deteccion de cambios: Gracias a los bind mounts cualquier cambio en el catalogo se detecta en desarrollo
+
+
+
+
+```bash
+USUARIO / FRONTEND
+              |
+      [ 1. Dispara Job ETL ]
+              |
+              v
+      +-----------------------+
+      |    INTEGRADOR API     | <--- (Simula AWS Glue / ETLItemsJob-Corp)
+      |   (Puerto 8080)       |
+      +----------+------------+
+                 |
+        [ 2. Petición GET ]
+        [  /services/GetItems ]
+                 |
+                 v
+      +-----------------------+      +--------------------------+
+      |      AS400 CORE       |      |     DATABASE SHARED      |
+      |   (Puerto 5001)       |      |    (Volumen /database)   |
+      +----------+------------+      +------------+-------------+
+                 |                                ^
+        [ 3. Retorna JSON ]                       |
+        [ Maestro de Items]                       |
+                 |                                |
+                 +-------[ 4. Escribe CSV ]-------+
+                         [ items.csv / invacts.csv]
+                                                  |
+                                                  |
+                         +------------------------+
+                         |
+                [ 5. Lee CSV y cruza datos ]
+                         |
+                         v
+              +-----------------------+
+              |    FABRIC MONITOR     | <--- (Simula Motor AVAIL)
+              |    (Bucle Infinito)   |
+              +----------+------------+
+                         |
+                [ 6. Salida en Logs ]
+                [ "BIG COLA 3L: 140kg"]
+```

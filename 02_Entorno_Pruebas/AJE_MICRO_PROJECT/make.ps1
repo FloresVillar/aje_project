@@ -1,5 +1,5 @@
 param([string]$command="ayuda",
-      [string]$ARCHIVO="arbol_diretorio"
+      [string]$ARCHIVO="arbol_directorio"
     )
 
 switch($command){
@@ -8,6 +8,9 @@ switch($command){
     }
     "limpieza"{
         
+    }
+    "levantar_sistema"{
+        docker compose up --build
     }
     default {
         Write-Host "--MENU AYUDA" -ForegroundColor Red
