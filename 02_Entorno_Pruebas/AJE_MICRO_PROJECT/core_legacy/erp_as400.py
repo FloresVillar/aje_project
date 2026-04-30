@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify
 import pandas as pd
-
+import os
 
 #simulando el core(big magic) y la base de datos
 app = Flask(__name__)
@@ -34,6 +34,17 @@ def actualiza_personal():
         return jsonify({"resultado":"ACK","status":"Registro Grabado"}),200
     except Exception as e:
         return jsonify({"error" : f"falla comunicacion con core:{e}"}),502
+
+BOM_PATH = './database/iboms.csv'
+if not os.path.exists('./database/iboms.csv'):
+    df_boms = pd.DataFrame(columns = ['MakeItemCd','BoMVerCd','UseItemCd','UsePer','WastePct'])
+    df_boms.loc[0] = ['501068','92001','MAT-PRIMA-01',0.33005537,2.5] # registro de ejemplo, producto 501068 usa 0.33 de jarabe
+    df_boms.to_csv(BOM_PATH,index=False)
+
+@app.route('/services/GetBOMs',methods = ['GET'])
+def get_boms():
+    df = pd.read_csv('./database/iboms.csv')
+    return jsonify(df.to_dict(orient = 'records'))
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=5001)

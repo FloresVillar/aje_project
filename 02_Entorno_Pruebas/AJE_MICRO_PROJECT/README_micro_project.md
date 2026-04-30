@@ -1,4 +1,4 @@
-## Emulacion del sistema big-magic , plan de viajes, portal de viajes, etc
+## Simulacion del sistema big-magic , plan de viajes, portal de viajes, etc
 
 1. Portal de viajes Envia la solicitud **solicitud_viaje** (un diccionario con claves viaje_id, empleado,total)al endpoint **http://integrador_api:8080/ejecutaFuncion** 
 
@@ -50,7 +50,7 @@ PORTAL VIAJES (JSON)          INTEGRADOR (Proxy/SOAP)           AS400 CORE (ERP)
    [Imprime Respuesta]                  │                              │
           ▼                             │                              │
 ```
-## Emulacion de "Administracion de Personal" y "Gestion de nominas"
+## Simulacion de "Administracion de Personal" y "Gestion de nominas"
 
 Para esta emulacion suceden algunos problemas de ejecucion, mientras que pra la emulacion del sistema Big Magic los contenedores y los servicios en ellos no presentan mayor contratiempo.
 
@@ -89,7 +89,7 @@ ZONA CLOUD (Azure)          │          ZONA ON-PREMISE (Local)
                  [ Integrador ] ───┼───────────────▶║
                  (API Gateway)     │                ║
                         ▲          │                ▼
-  [ Portal RRHH ] ──────┘          │      📂 [ mpersoef_2.csv ] ◀══ BIND MOUNT
+  [ Portal RRHH ] ──────┘          │       [ mpersoef_2.csv ] ◀══ BIND MOUNT
        (Python)                    │          (Recurso Compartido)
                                    │                ║
     ───────────────────────────────┼────────────────║──────────────────────────
@@ -107,3 +107,66 @@ ZONA CLOUD (Azure)          │          ZONA ON-PREMISE (Local)
              DE VISUALIZACIÓN      │              [ Terminal Docker ]
                                    │               (Standard Output)
 ```
+
+## simulacion de AWS Glue /AVAIL bombs
+
+Simulamos procesos de negocio especificos.
+1. Extraccion de maestros(Big Magic → Glue) Cuando llamamos a **GetBoms** se simula la ejecucion del Store Procedure **AV10_IBOMI**, en el proyecto este procedimiento "barre" las tablas del ERP Big Magic para extraer la recetas Tecnicas BOMs. En la simulacion el **as400_core** entrega el CSV de recetas , actuando como el servidor legacy de la planta.
+
+2. El middleware de transformacion (El servidor SQL) : El servidor **SRVGAPCT58** normaliza esquemas, en la simulacion **integrador_api** toma esos datos y, antes de guardarlos, limpia campos o valida que el UserPer sea un numero decimal valido.
+
+3. Sincronizacion mediante ETL (AWS GLue)
+El hilo que se dispara represetna al Job de Glue  **ETLBomsJob-Corp**, en el proyecto es un proceso "Batch" que corre de forma automatica. El sistema se configura para que la nube lo procese periodicamente. En la simulacion el script se llama a si mismo , simulando la autonomia dde la nube AWS.
+
+4. Actualizacion del plan de suministros(AVAIL) El destino final **avail_south_boms.csv** presenta la base de datos RDS Postgres **A10_SOUTH**. En el proyecto cuando los datos llegan a postgres, AVAIL los procesa para calcular cuanto material comprar.En la simulacion  **fabric_monitor** cumple esa misma funcion.Si se cambia un dato en el origen, el monitor avisara de la nueva receta , simulando como un planificador de suministros veria la actualizacion en su tablero de control.
+
+Resumen:
+- **as400_core** es el ERP Big Magic (legacy)
+- **integrador_api** es el nexo AWS Glue ++ SQL de tranformacion
+- **Fabric_monitor** Es el sistema AVAIL (Cloud Planning)
+
+```bash
+NIVEL DE ORQUESTACIÓN Y ETL (Simulación AJE)
+      ──────────────────────────────────────────────
+
+      [ CONTENEDOR: as400_core ]          [ CONTENEDOR: integrador_api ]
+      ──────────────────────────          ──────────────────────────────
+                  │                                     │
+    (A) TABLA MAESTRA (BOMs)                            │  (B) HILO "ORQUESTADOR"
+        [ iboms.csv ]                                   │      (Loop cada 120s)
+                  │                                     │          │
+                  │          (1) GET /GetBOMs           │◀─────────┘
+                  │ ◀───────────────────────────────────│
+                  │                                     │  (2) TRANSFORMACIÓN
+                  │          (3) JSON Data              │      (Lógica Python)
+                  │ ───────────────────────────────────▶│
+                                                        │
+      [ VOLUMEN COMPARTIDO ]                            │  (4) CARGA (LOAD)
+      ──────────────────────                            │      (Escritura CSV)
+                  │                                     │
+        [ avail_south_boms.csv ] ◀──────────────────────┘
+                  │
+                  ▼
+      [ CONTENEDOR: fabric_monitor ]
+      ──────────────────────────────
+      (5) CONSUMO (Analítica)
+          "Vigilante de AVAIL"
+```
+
+## simulacion Invacts (aun no implementado en codigo)
+
+1. **integrador_api** invoca a requests.post("http://127.0.0.1:8080/aws_glue/ETLInvAcstJob-Corp"), este jobs aparece en la lists de integraciones como el encargado de sincronizar el stock de PT(producto terminado) y MP(materia prima).
+
+2. **Extraccion desde el ERP (Store Procedure AV10_ISIS)**
+El integrador llama a http://as400_core:5001/services/GetInventory. 
+En as400_core.py  este endpoint simula los Sps **AV10_ISIS_FLOOR** y **AV10_ISIS_RM**. Lee el archivo **database/invacts.csv** , que contiene los campos obligatorios LocCd (plnata) ItemCd (producto)  , InvQty (cantidad) AsOfStamp (fecha/Hora)
+
+3. **Transformacion y mapeo(carga intermedia SRVGAPCT58)** El integrador recibe el JSON de inventario.Aqui se realiza la logica de negocio
+
+    - convierte las unidades a "base UOM"(Unidad de Medida Base)
+    - Valida que la fecha **InvTm** tenga el formato ISO correcto
+    - Prepara el paquete para la tabla de interfaz **IINVACTS**
+
+4. 
+
+## Simulacion cadena de suministros/Avail/Items.docx

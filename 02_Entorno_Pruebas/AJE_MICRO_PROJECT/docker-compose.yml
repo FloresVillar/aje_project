@@ -22,6 +22,8 @@ services:
     networks:
       - azure_net
       - onprem_net
+    volumes:
+      - ./database/:/app/database
   portal_viajes:
     build: ./cloud_azure
     container_name: portal_viajes
