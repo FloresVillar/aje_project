@@ -1,12 +1,15 @@
 Documentacion parafraseado del buen gemini.
 
 ## FullStep
-
-### Integracion proceso compras
 Es la "pieza hermana" del plan de viajes , pero enfocada a Compras y abastecimiento. Aqui se ve como se integra la plataforma externa FullStep (Saas de e-procurement) con el ecosistema de AJE.
 
+<p align="center">
+    <img src="../../imagenes/full_step.png" width="85%">
+</p>
+
 #### FullStep como SaaS
-está al lado izquierdo ,aparece como SaaS , es la plataforma donde los compradores de AJE probablemente gestionan licitaciones , cotizaciones y seleccion de proveedores.
+Está al lado izquierdo ,aparece como SaaS , es la plataforma donde los compradores de AJE gestionan las licitaciones , cotizaciones y seleccion de proveedores.
+
 
 - la conexion : se comunica via **Web Services** con un servidor **WildFly** (un servidor de aplicacion Java) que está en la nube de AWS de AJE.
 
@@ -78,7 +81,7 @@ Los metodos SOAP que se ddetallan en el pdf **integracion Proceso Compras.pdf** 
 
 **consulta** → **registro** → **anulación**
 
-[detalle de las red]()
+
 
 ## SAP MX
 

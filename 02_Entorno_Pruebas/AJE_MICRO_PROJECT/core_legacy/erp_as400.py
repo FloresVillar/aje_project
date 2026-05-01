@@ -45,6 +45,21 @@ if not os.path.exists('./database/iboms.csv'):
 def get_boms():
     df = pd.read_csv('./database/iboms.csv')
     return jsonify(df.to_dict(orient = 'records'))
+# este endpoint entrega el paquete completo de datos , incluyendo identificadores de parcela  sub-localizacion
+@app.route('/services/GetInventory',methods=['GET'])
+def get_inventory():
+    inventory_db = [
+        {
+            "parcelId": 5501,          # Number(10) - ID retornado por load_parcel
+            "LocCd": "8502",           # Character(25) - Location unique identifier
+            "ItemCd": "501068",        # Character(25) - Item unique identifier
+            "InvTm": "11/20/2020 02:19", # DateTime - Date/Time count is made
+            "AsOfStamp": "11/20/2020 02:19", # DateTime - Date/Time value was recorded
+            "InvQty": 8040.0,          # Float - Count in Base UOM
+            "SublocCd": "01" 
+        }
+    ]
+    return jsonify(inventory_db)
 # recordar, este modulo(core_legacy) actua como el satelite original(servidor SRVGLZADB01) que expone la tabl de interfaz IITEMS
 @app.route('/services/GetItems',methods=['GET'])
 def get_items():

@@ -1,0 +1,3 @@
+BaseUoM,BaseWt,IsBuy,IsMatl,IsPal,IsProd,IsSell,IsWIP,Item,ItemCd,ItemNm,ItemTag1,KindCd,ShipWt,Variant,VarietyCd,parcelId
+CASE,18.5,N,N,N,Y,Y,N,15OZ_CN1/12_DTSODA,501068,BIG COLA 3L,CSD,02,1350.0,Standard,16,1001.0
+KG,1.0,Y,Y,,N,N,,,100045,AZUCAR INDUSTRIAL,RAW,05,1000.0,,,

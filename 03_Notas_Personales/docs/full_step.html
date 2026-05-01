@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Jerarquía de Procesos FullStep - AJE</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body { background-color: #0d1117; margin: 0; padding: 20px; color: white; }
+        .container { display: flex; justify-content: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <pre class="mermaid">
+        graph LR
+            %% Estilos de Nodos
+            classDef root fill:#f96,stroke:#333,stroke-width:4px,color:#000,font-weight:bold;
+            classDef proc fill:#2374ab,stroke:#fff,stroke-width:2px,color:#fff,font-weight:bold;
+            classDef method fill:#444,stroke:#888,color:#ddd,font-size:12px;
+            classDef sp fill:#1c1c1c,stroke:#00ff00,stroke-width:1px,color:#00ff00,font-style:italic;
+
+            Root((FullStep v3)):::root
+            
+            %% Nivel 1: Procesos (Basado en tu imagen)
+            Root --> P_Art[Artículos]:::proc
+            Root --> P_Prov[Proveedores]:::proc
+            Root --> P_Sol[Solicitudes]:::proc
+            Root --> P_Neg[Negociaciones]:::proc
+            Root --> P_Mix[Solicitudes / Negociaciones / Pedidos]:::proc
+            Root --> P_Ped[Pedidos]:::proc
+
+            %% Artículos
+            P_Art --> INT01(INT 01: Mantenimiento Artículos):::method
+            INT01 --> SP01[PR_ERP_COM_QRY_GN_RegistrarArticulos]:::sp
+
+            %% Proveedores
+            P_Prov --> INT02(INT 02: Registrar Proveedor):::method
+            INT02 --> SP02[PR_ERP_COM_QRY_GN_RegistrarProveedores]:::sp
+            P_Prov --> INT03(INT 03: Consultar Proveedor):::method
+            INT03 --> SP03[PR_ERP_COM_QRY_GN_ConsultarProveedorHabilitado]:::sp
+
+            %% Solicitudes
+            P_Sol --> INT04(INT 04: Registrar Requerimiento):::method
+            INT04 --> SP04[PR_ERP_COM_QRY_GN_RegistrarReqCompras]:::sp
+            P_Sol --> INT05(INT 05: Cancelar Requerimiento):::method
+            INT05 --> SP05[PR_ERP_COM_QRY_GN_CancelarReqCompras]:::sp
+            P_Sol --> INT06(INT 06: Listar Mejorar Activo Fijo):::method
+            INT06 --> SP06[PR_ERP_COM_QRY_GN_ConsultarMejoraAF]:::sp
+            P_Sol --> INT07(INT 07: Listar Partidas Presupuestarias):::method
+            INT07 --> SP07[PR_ERP_COM_QRY_GN_ConsultarPartidaPresupuesto]:::sp
+            P_Sol --> INT08(INT 08: Trabajos En Curso):::method
+            INT08 --> SP08[PR_ERP_COM_QRY_GN_ConsultarTrabajoEnCurso]:::sp
+            P_Sol --> INT09(INT 09: Listar Tipo De Cambio):::method
+            INT09 --> SP09[PR_ERP_COM_QRY_GN_ConsultarTipoDeCambio]:::sp
+
+            %% Negociaciones
+            P_Neg --> INT10(INT 10: Registrar Adjudicación):::method
+            INT10 --> SP10[PR_ERP_COM_QRY_GN_RegistrarAdjudicacionOrdenCompra]:::sp
+
+            %% Mixto (Solicitudes / Negociaciones / Pedidos)
+            P_Mix --> INT11(INT 11: Anular Documento Compra):::method
+            INT11 --> SP11[PR_ERP_COM_QRY_GN_AnularReqCompra]:::sp
+
+            %% Pedidos
+            P_Ped --> INT12(INT 12: Registrar Orden Compra):::method
+            INT12 --> SP12[PR_ERP_COM_QRY_GN_RegistrarOrdenCompra]:::sp
+            P_Ped --> INT13(INT 13: Cancelar Orden):::method
+            INT13 --> SP13[PR_ERP_COM_QRY_GN_RegistrarCancOrdenCompra]:::sp
+        </pre>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'dark',
+            flowchart: { curve: 'stepAfter', rankSpacing: 50, nodeSpacing: 10 } 
+        });
+    </script>
+</body>
+</html>

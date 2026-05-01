@@ -242,3 +242,17 @@ Es un diagrama de flujo de procesos (BPMN) de nivel macro.Se organiza mediante:
 - Lanes(carriles): las divisiones horizontales que indica quien hace qué
 - Eventos (circulos): verde para inicio y rojo para el final
 - Comuertas (gateways) : los rombos con una X o + , indican decisiones o divisiones del flujo
+
+## Un saas de e-procurement ( software como Servicio para aprovisionamiento electronico)
+Es un plataforma digital alojada en la nube que permite a las empresas gestionar , automatizar y centralizar todo su ciclo de adquisiciones sin necesidad de instalar software en servidores propios.
+
+Estas herramientas digitalizan el proceso de compras de bienes y servicios (proceso S2P - Source-To-Pay) cubriendo estas etapas claves:
+- Seleccion y catalogos
+- Gestion de pedidos
+- Gestion de proveedores
+- Facturacion y pagos
+
+### Ventajas de plataformas saas de e-procurement
+- Ahorro de costos
+- Visibilidad en tiempo real
+- Escalabilidad

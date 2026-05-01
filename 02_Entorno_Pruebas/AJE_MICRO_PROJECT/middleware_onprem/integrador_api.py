@@ -48,21 +48,33 @@ def run_etl_boms():
         return jsonify({"status":"EXITO","records_processed":len(datos_raw)})
     except Exception as e:
         return jsonify({"status":"ERROR","detail":str(e)}),500
-#simula AWS EventBringe disparando el job cada cierto tiempo
-def disparador_aws_glue():
-    time.sleep(15)
-    while True:
-        try:
-            print(f"[EVENTBRINGE] Es hora de sincronizar AVAIL...")
-            requests.post("http://127.0.0.1:8080/aws_glue/ETLBomsJob-Corp")
-        except Exception as e:
-            print(f"[ERROR] disparador fallido : {e}")
-        time.sleep(40)
+
+@app.route('/aws_glue/ETLInvActsJob-Corp',methods=['POST'])
+def run_inventory_etl():
+    #extraccion desde el satelite (simula ip 10.0.56.7)
+    response = requests.get("http://as400_core:5001/services/GetInventory") 
+    raw_data = response.json()
+    registros_procesados = []
+    for fila in raw_data:
+        registro = {
+            "parcelId": fila["parcelId"],
+            "LocCd": fila["LocCd"],
+            "ItemCd": fila["ItemCd"],
+            "InvTm": fila["InvTm"],
+            "AsOfStamp": fila["AsOfStamp"],
+            "InvQty": fila["InvQty"],
+            "SublocCd": fila["SublocCd"]
+        }
+        registros_procesados.append(registro)
+    df = pd.DataFrame(registros_procesados)   # carga a la interfaz simulada CSV compartido
+    df.to_csv("./database/invacts.csv",index=False)
+    return jsonify({"status":"IINVACTS_CARGA_EXITOSA","parcelId":raw_data[0]["parcelId"]})
+
 #este modulo(middleware_onprem) simula el Job de AWS Glue(ETLItems-Corp). Su funcion es succionar el paquete de satelite y despositarlo en el volumen compartido database/
 DATABASE_PATH = "database/items.csv"
 @app.route('/aws_glue/ETLItemsJob-Corp',methods=['POST'])
 def run_items_etl():
-    response = requests.get("htpp://as400_core:5001/services/GetItems") # 1. extrae desde el satelite
+    response = requests.get("http://as400_core:5001/services/GetItems") # 1. extrae desde el satelite
     data = response.json()
     df = pd.DataFrame(data)                         #  2. transformacion
     df['BaseWt'] = pd.to_numeric(df['BaseWt'])      #   validacion de integridad(que los pesos sean numericos)
@@ -70,6 +82,18 @@ def run_items_etl():
     df.to_csv(DATABASE_PATH,index=False)    
     return jsonify({"status":"succes","records_processed":len(df)})
 
+#simula AWS EventBringe disparando el job cada cierto tiempo
+def disparador_aws_glue():
+    time.sleep(15)
+    while True:
+        try:
+            print(f"[EVENTBRINGE] Es hora de sincronizar AVAIL...")
+            requests.post("http://127.0.0.1:8080/aws_glue/ETLBomsJob-Corp")
+            requests.post("http://127.0.0.1:8080/aws_glue/ETLItemsJob-Corp")
+            requests.post("http://127.0.0.1:8080/aws_glue/ETLInvActsJob-Corp")
+        except Exception as e:
+            print(f"[ERROR] disparador fallido : {e}")
+        time.sleep(40)
 
 if __name__=='__main__':
     threading.Thread(target=disparador_aws_glue,daemon=True).start()

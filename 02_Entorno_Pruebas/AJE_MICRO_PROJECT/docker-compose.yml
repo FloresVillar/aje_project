@@ -37,7 +37,8 @@ services:
     build: ./transversal_analytics
     container_name: fabric_monitor
     volumes:
-      - ./core_legacy/database:/app/database
+      - ./core_legacy/database:/app/database_legacy
+      - ./database:/app/database
     depends_on:
       - as400_core
     environment:

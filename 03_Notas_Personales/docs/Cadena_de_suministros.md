@@ -185,6 +185,6 @@ Que datos viajan en el paquete **InvActs** , segun los estandares de AJE .
     - **BaseWt** (Base Weight) el peso de la unidad (ej 6.37) es vital para no sobrecargar los camiones en la simulacion de despacho
     - **ShipWt** (Ship Weight) El peso total cuando se envia en unidades mayores, como un pallet completo (ej 1350)
 
-
+### 
 
     

@@ -167,6 +167,39 @@ En as400_core.py  este endpoint simula los Sps **AV10_ISIS_FLOOR** y **AV10_ISIS
     - Valida que la fecha **InvTm** tenga el formato ISO correcto
     - Prepara el paquete para la tabla de interfaz **IINVACTS**
 
+```bash
+[ ERP AV10_ISIS ] (Legacy AS400)
+               |
+               | (1) GET /services/GetInventory
+               v
+    +-----------------------+
+    |    INTEGRADOR API     | <--- (2) Recibe JSON/XML
+    +-----------------------+
+               |
+               | (3) Invoca AWS Glue Job
+               v
+    +-----------------------+
+    |     AWS GLUE ETL      | <--- (4) Procesa y Transforma
+    +-----------------------+
+               |
+               | (5) Escribe CSV
+               v
+    +-----------------------+
+    |   ./database/         |
+    |  invacts.csv (Data)   | <--- (6) ¡Aquí vive el stock!
+    |  items.csv   (Maestro)|
+    +-----------------------+
+               |
+               | (7) Bucle while True (Lectura)
+               v
+    +-----------------------+
+    |    FABRIC MONITOR     |
+    +-----------------------+
+    |   ¿ItemCd es STR?     |
+    |   SI: "BIG COLA 3L"   | <--- (8) LOG FINAL EXITOSO
+    |   NO: "Desconocido"   |
+    +-----------------------+
+```
 
 
 ## Simulacion cadena de suministros/Avail/Items.docx
