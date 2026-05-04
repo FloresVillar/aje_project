@@ -9,8 +9,8 @@ services:
     volumes:
       - ./core_legacy/database:/app/database
     networks:
-      - onprem_net
-  integrador_api:
+      - private_onprem_net
+  wildfly_integrador_api:
     build: ./middleware_onprem
     depends_on:
       - as400_core
@@ -21,14 +21,14 @@ services:
       - ERP_UPDATE=http://as400_core:5001/services/ActualizaPersonal
     networks:
       - azure_net
-      - onprem_net
+      - private_onprem_net
     volumes:
       - ./database/:/app/database
   portal_viajes:
-    build: ./cloud_azure
-    container_name: portal_viajes
+    build: ./portal_viajes_azure
+    container_name: portal_viajes_appservices
     depends_on:
-      - integrador_api
+      - wildfly_integrador_api
     environment:
       - API_URL=http://integrador_api:8080/ejecutaFuncion
     networks:
@@ -54,14 +54,39 @@ services:
     environment:
       - PYTHONUNBUFFERED=1 
   portal_rrhh:
-    build: ./portal_rrhh
-    container_name: portal_rrhh
+    build: ./portal_rrhh_azure
+    container_name: portal_rrhh_appservices
     networks:
       - azure_net
     depends_on:
-      - integrador_api
+      - wildfly_integrador_api
+  fullsteps_saas:
+    build: ./fullstep_saas
+    container_name: fullstep_sass
+    depends_on:
+      - wildfly_integrador_api
+    networks:
+      - azure_net
+  sftp_aje:
+    image: atmoz/sftp
+    volumes:
+      - ./sftp_data:/home/epiuse/upload
+    ports:
+      - "2222:22"
+    networks:
+      - azure_net
+  lambda_handler:
+    build: ./lambda_simurator
+    volumes:
+      - ./sftp_data:/data
+    depends_on:
+      - sftp_aje
+      - as400_core
+    networks:
+      - azure_net
+      - private_onprem_net
 networks:
   azure_net:
-  onprem_net:
+  private_onprem_net:
   backend_net:
   

@@ -12,6 +12,12 @@ switch($command){
     "levantar_sistema"{
         docker compose up --build
     }
+    "buscar_errores"{
+        ruff check .
+    }
+    "activar_entorno_virtual"{
+        .\.venv_aje\Scripts\Activate.ps1
+    }
     default {
         Write-Host "--MENU AYUDA" -ForegroundColor Red
         Write-Host "comandos"

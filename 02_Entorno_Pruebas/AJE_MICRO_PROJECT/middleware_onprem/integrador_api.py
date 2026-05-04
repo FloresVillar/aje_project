@@ -12,16 +12,23 @@ ERP_URL = "http://as400_core:5001/services/InsertaOG"
 
 @app.route('/ejecutaFuncion',methods=['POST'])
 def integrador():
-    datos_portal = request.json
-    print(f"[INTEGRADOR] traduccion de json a xml para:{datos_portal['empleado']}")
-    soap_xml = f"""\
-     <soap:Envelope>\
-        <id>{datos_portal['viaje_id']}</id> \
-        <monto>{datos_portal['total']}</monto> \
-    <soap:Envelope>"""  
-    respuesta = requests.post("http://as400_core:5001/services/InsertaOG",data=soap_xml)
-    return jsonify({"status":"Proceso en ERP","respuesta_soap":respuesta.text})
-
+    datos = request.json
+    if 'viaje_id' in datos:
+        datos_portal = datos
+        print(f"[INTEGRADOR] traduccion de json a xml para:{datos_portal['empleado']}")
+        soap_xml = f"""\
+        <soap:Envelope>\
+            <id>{datos_portal['viaje_id']}</id> \
+            <monto>{datos_portal['total']}</monto> \
+        <soap:Envelope>"""  
+        respuesta = requests.post("http://as400_core:5001/services/InsertaOG",data=soap_xml)
+        return jsonify({"status":"Proceso en ERP","respuesta_soap":respuesta.text})
+    else:
+        url_erp = "http://as400_core:5001/services/ComprasAjeGroupWSPortBinding"
+        metodo_wsdl = datos.get("metodo")
+        soap_xml = f"<{metodo_wsdl}>{datos.get('contenido')}</{metodo_wsdl}"
+        respuesta = requests.post(url_erp,data = soap_xml)
+        return jsonify({"status":"proceso en ERP","respuesta_soap":respuesta.text})
 #endpoint que representa la transicion al evento final del diagrama de administracion del personal
 
 @app.route('/bmp/evento_activacion',methods=['POST'])

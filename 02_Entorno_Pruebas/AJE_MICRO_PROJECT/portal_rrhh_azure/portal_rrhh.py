@@ -4,7 +4,7 @@ import time
 time.sleep(10)
 # subproceso gestion contrato,al terminar dispara la persistencia al core legacy.
 def ejecutar_gestion_de_contrato(id_emp,nombre,puesto,salario):
-    url = "http://integrador_api:8080/bmp/evento_activacion"
+    url = "http://wildfly_integrador_api:8080/bmp/evento_activacion"
     payload = {
         "id": id_emp,
         "nombre": nombre,

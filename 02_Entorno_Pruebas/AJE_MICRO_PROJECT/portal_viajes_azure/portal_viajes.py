@@ -9,6 +9,6 @@ solicitud_viaje = {
 }
 
 print("[]PORTAL]Enviando solicitud a integrador...")
-response = requests.post("http://integrador_api:8080/ejecutaFuncion",json=solicitud_viaje)
+response = requests.post("http://wildfly_integrador_api:8080/ejecutaFuncion",json=solicitud_viaje)
 print("respuesta final")
 print(response.json())

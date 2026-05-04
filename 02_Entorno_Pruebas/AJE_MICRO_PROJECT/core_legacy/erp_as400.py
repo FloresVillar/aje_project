@@ -1,15 +1,17 @@
 from flask import Flask,request,jsonify
 import pandas as pd
 import os
-
+#es BD magic mx test (aws cloud)
 #simulando el core(big magic) y la base de datos
 app = Flask(__name__)
 #simulacion de la tabla "MPERSOEF" y "TCOALM1F"
 db_erp = {
     "empleados": ["E123","E456"],
-    "ordenes_gasto": []
+    "ordenes_gasto": [],
+    "compras_fullstep" : []
 }
 
+# simula al servidor BIG MAGIC MXTEST SRVGLZADB01
 @app.route('/services/InsertaOG/',methods=['POST'])
 def web_services():
     # aqui se procesaria el cuerpo xml de un wsdl 
@@ -18,8 +20,23 @@ def web_services():
     # simulando la insercion en Big Magic
     db_erp["ordenes_gasto"].append(data)
     return "<soap:Envelope> \
-            <soap:Body>Exito</soap:Body> \
+                <soap:Body>Exito</soap:Body> \
             </soap:Envelope>"
+
+# --capa de datos -- (SPs de salesForce/Efletex)
+def sp_registrar_compra_aje(id_pedido,monto):
+    print(f"[DB MAGIC ] logica interna {id_pedido}")
+    db_erp["compras_fullstep"].append({"id":id_pedido,"monto":monto})
+    return "OK"
+
+# --capa de red -- (ENDPOINT de los wsdls)
+@app.route('/services/ComprasAjeGroupWSBinding',methods=['POST'])
+def compras_binding():
+    data = request.data.decode('utf-8')
+    resultado = sp_registrar_compra_aje("FS-101",500.0)
+    return f"<soap:Envelope>\
+                <soap:Body>Exito FullStep:{resultado}</soap:Body>\
+            </soap:Envelope>"    
 
 @app.route('/services/ActualizaPersonal',methods=['POST'])
 def actualiza_personal():
@@ -41,10 +58,12 @@ if not os.path.exists('./database/iboms.csv'):
     df_boms.loc[0] = ['501068','92001','MAT-PRIMA-01',0.33005537,2.5] # registro de ejemplo, producto 501068 usa 0.33 de jarabe
     df_boms.to_csv(BOM_PATH,index=False)
 
+#cuando los jobs como ETLItemJob-Corp hacen request a /services/GetItems .. simula a SQL DMRRHHMXTEST(on-premise)
 @app.route('/services/GetBOMs',methods = ['GET'])
 def get_boms():
     df = pd.read_csv('./database/iboms.csv')
     return jsonify(df.to_dict(orient = 'records'))
+
 # este endpoint entrega el paquete completo de datos , incluyendo identificadores de parcela  sub-localizacion
 @app.route('/services/GetInventory',methods=['GET'])
 def get_inventory():
@@ -60,6 +79,7 @@ def get_inventory():
         }
     ]
     return jsonify(inventory_db)
+
 # recordar, este modulo(core_legacy) actua como el satelite original(servidor SRVGLZADB01) que expone la tabl de interfaz IITEMS
 @app.route('/services/GetItems',methods=['GET'])
 def get_items():

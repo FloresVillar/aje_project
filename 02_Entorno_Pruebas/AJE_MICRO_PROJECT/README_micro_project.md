@@ -50,6 +50,70 @@ PORTAL VIAJES (JSON)          INTEGRADOR (Proxy/SOAP)           AS400 CORE (ERP)
    [Imprime Respuesta]                  │                              │
           ▼                             │                              │
 ```
+## Simulacion full-Step
+
+1. FullStep Saas inicia el proceso enviando el diccionario **adjudicacion_compra** con el metodo **registrarAdjudicacion** y los datos de orden/proveedor , al endpoint del integrador en **http://wildfly_integrador_api:8080/ejecutaFuncion**
+2. Integrador recibe el JSON, identifica que no es un viaje (else) y mapea el **metodo_wsdl** para construir el **soap_xml** que necesita el core legacy
+3. Integrador despacha la peticion POST con el xml al endpoint de red del core **http://as400_core:5001/services/ComprasAjeGroupWSBinding**
+4. AS400 (capa de red) recibe el xml en la funcion **compras_binding** extrae los parametros y deleg la ejecucion a la **capa de datos** invocando a **sp_registrar_compra_aje**
+5. AS400 (capa de datos) ejecuta la logica interna del Stored Procedured, imprime el log "logica interna" y persiste la informacion en la lista **db_erp["compras_fullstep]"** 
+6. AS400 retorna un sobre SOAP XML con el mensaje de "estilo fullstep" hacia el integrador
+7. Integrador recibe la respuesta del Core, la encapsula en un JSON con la clave **respuesta_soap** y finaliza la peticion HTTP iniciada por fullstep
+8. FullStep recibe el objeto de respuestaa y lo imprime en consola para confirmar que la adjudicacion fue procesada correctamente en el ERP
+
+
+```bash
+SISTEMA EXTERNO (SaaS)          MIDDLEWARE (WS LINUX)                CORE ERP (AWS CLOUD)
+   [FullStep SaaS]            [WildFly Integrador]                [SRVGLZADB01 / BM]
+-----------------------      ----------------------          -----------------------------
+          |                             |                               |
+          |  1. POST (JSON)             |                               |
+          |---------------------------->|                               |
+          |  (adjudicacion_compra)      |                               |
+          |                             |                               |
+          |                             |  2. Traduce JSON a XML/SOAP   |
+          |                             |  3. POST (SOAP XML)           |
+          |                             |------------------------------>|
+          |                             |  (registrarAdjudicacion)      |
+          |                             |                               |
+          |                             |                               |  4. Capa de Red (WSDL)
+          |                             |                               |     recibe XML
+          |                             |                               |           |
+          |                             |                               |  5. Capa de Datos (SP)
+          |                             |                               |     sp_registrar_compra_aje
+          |                             |                               |           |
+          |                             |                               |  6. Persistencia Física
+          |                             |                               |     db_erp['compras_fullstep']
+          |                             |                               |           |
+          |                             |  7. HTTP 200 (SOAP XML)       |           |
+          |                             |<------------------------------|-----------'
+          |                             |    (Exito FullStep)           |
+          |                             |                               |
+          |  8. Respuesta (JSON)        |                               |
+          |<----------------------------|                               |
+          |  (respuesta_soap)           |                               |
+          |                             |                               |
+```
+```bash
++-------------------------+-----------------------------------+---------------------------------------------------------+
+|  COMPONENTE EN CÓDIGO   |    EQUIVALENCIA EN SISTEMA AJE    |                    ROL / FUNCIÓN                        |
++-------------------------+-----------------------------------+---------------------------------------------------------+
+| fullsteps_saas          | FullStep SaaS                     | Plataforma externa (SaaS) de licitaciones y compras.    |
++-------------------------+-----------------------------------+---------------------------------------------------------+
+| wildfly_integrador_api  | Servidor WS Linux (10.0.56.4)     | Middleware/Gateway: traduce JSON a SOAP (XML).          |
++-------------------------+-----------------------------------+---------------------------------------------------------+
+| as400_core              | SRVGLZADB01 (10.101.14.184)       | Servidor de Base de Datos "Big Magic" (AWS Ohio).       |
++-------------------------+-----------------------------------+---------------------------------------------------------+
+| registrarAdjudicacion   | WSDL Binding                      | Contrato de servicio en "ComprasAjeGroupWSBinding".     |
++-------------------------+-----------------------------------+---------------------------------------------------------+
+| sp_registrar_compra_aje | Stored Procedure (SP)             | Lógica de negocio SQL (Capa de Datos Salesforce/Efletex)|
++-------------------------+-----------------------------------+---------------------------------------------------------+
+| db_erp['compras_fstep'] | Tablas de Compra (F)              | Persistencia física de las Órdenes de Compra (OC).      |
++-------------------------+-----------------------------------+---------------------------------------------------------+
+| database/               | S3 Bucket / EFS / Staging         | Zona de aterrizaje (Landing Zone) para archivos planos. |
++-------------------------+-----------------------------------+---------------------------------------------------------+
+```
+
 ## Simulacion de "Administracion de Personal" y "Gestion de nominas"
 
 Para esta emulacion suceden algunos problemas de ejecucion, mientras que pra la emulacion del sistema Big Magic los contenedores y los servicios en ellos no presentan mayor contratiempo.
