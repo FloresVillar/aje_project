@@ -9,7 +9,7 @@ Pass: Qwerty123
 
 ## Actual Plan  Viajes-Flujo general.drawio.png
 
-revisar [ARQUITECTURA_PLAN_VIAJES.md](../ARQUITECTURA_PLAN_VIAJES.md)
+revisar [ARQUITECTURA_PLAN_VIAJES.md](ARQUITECTURA_PLAN_VIAJES.md)
 
  
 
@@ -46,7 +46,7 @@ Cada punto consiste en invocar un api diferente:
 7. Desde la MXBDAJE se consulta la DMRRHHMX para obtener los datos, los cuales son devueltos a la app de apache tomcat.
 8. App apache tomcat envía los datos al portal de plan de viajes.
 9. Portal de solicitudes valida permisos y envía los datos de nuevas ordenes de giro a la MXBDAJE. Revisar 
-revisar [ARQUITECTURA_PLAN_VIAJES.md](../ARQUITECTURA_PLAN_VIAJES.md)
+revisar [ARQUITECTURA_PLAN_VIAJES.md](ARQUITECTURA_PLAN_VIAJES.md)
 
 #### Parámetros de Conexión
 
